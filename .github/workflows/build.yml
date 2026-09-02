@@ -1,0 +1,39 @@
+name: Build
+
+on:
+  # Build on new commits or pull requests.
+  push:
+  pull_request:
+  schedule:
+    # Run every week just to make sure the CI environment still works.
+    - cron: '0 0 * * 0'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: true
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      # Install dotnet 6.0 for the mautil command
+      with:
+        dotnet-version: |
+          6.0.x
+          8.0.x
+    - name: Merge translations into add-in manifest
+      if: false # Skip for now since there aren't any translations
+      run: dotnet run --project Pinta/installer/addins/Pinta.AddinUtils.csproj -- localize-manifest --manifest-file DragResizeCanvas/.addin.xml --resource-files DragResizeCanvas/Resources/*.resx
+    - name: Compile
+      run: dotnet build -c Release
+    - name: Install mautil
+      run: dotnet tool install --global Mono.Addins.UtilTool
+    - name: Create Package
+      run: mautil pack DragResizeCanvas/bin/Release/net8.0/DragResizeCanvas.dll
+    - name: Upload Package
+      uses: actions/upload-artifact@v6
+      with:
+        path: '*.mpack'
+        if-no-files-found: error
