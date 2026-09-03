@@ -122,6 +122,14 @@ public sealed class CanvasResizeHandle : IToolHandle
 	private CanvasMoveHandle? active_handle;
 	private PointD? drag_start_pos;
 
+	// The rectangle before the drag began, used to snap the handles back
+	// into place when the drag ends.
+	private PointD start_snapshot;
+	private PointD end_snapshot;
+
+	// The result of the most recent drag (null if no drag has happened).
+	private RectangleD? resized_rectangle;
+
 	public CanvasResizeHandle (IWorkspaceService workspace)
 	{
 		this.workspace = workspace;
@@ -170,7 +178,15 @@ public sealed class CanvasResizeHandle : IToolHandle
 	}
 
 	/// <summary>
+	/// The result of the most recent drag, in canvas coordinates.
+	/// This is the resized rectangle that was previewed while dragging.
+	/// </summary>
+	public RectangleD? ResizedRectangle => resized_rectangle;
+
+	/// <summary>
 	/// Begins a drag operation if the mouse position is on top of a handle.
+	/// The current rectangle is saved so the handles can snap back when
+	/// the drag ends, leaving the actual resizing to the caller.
 	/// </summary>
 	public bool BeginDrag (in PointD canvasPos)
 	{
@@ -182,6 +198,10 @@ public sealed class CanvasResizeHandle : IToolHandle
 
 		if (active_handle is null)
 			return false;
+
+		start_snapshot = start_pt;
+		end_snapshot = end_pt;
+		resized_rectangle = null;
 
 		drag_start_pos = viewPos;
 		return true;
@@ -207,12 +227,20 @@ public sealed class CanvasResizeHandle : IToolHandle
 	}
 
 	/// <summary>
-	/// Finishes a drag operation.
+	/// Finishes a drag operation. The previewed rectangle is stored in
+	/// <see cref="ResizedRectangle"/> and the handles snap back to the
+	/// rectangle they were dragged from.
 	/// </summary>
 	public void EndDrag ()
 	{
 		if (drag_start_pos is null)
 			return;
+
+		resized_rectangle = Rectangle;
+
+		start_pt = start_snapshot;
+		end_pt = end_snapshot;
+		UpdateHandlePositions ();
 
 		active_handle = null;
 		drag_start_pos = null;

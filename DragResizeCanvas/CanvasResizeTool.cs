@@ -55,37 +55,30 @@ public sealed class CanvasResizeTool : BaseTool
 	{
 		base.OnDeactivated (document, newTool);
 
+		// Cancel any in-progress drag: push the merged history item if the
+		// canvas was resized, and snap the handles back to the canvas bounds.
 		handle.Active = false;
 		handle.EndDrag ();
 
-		// If a drag was in progress, push the merged history item.
-		if (hist is not null && document is not null) {
-			document.History.PushNewItem (hist);
-			hist = null;
-		}
+		if (document is not null) {
+			if (hist is not null) {
+				document.History.PushNewItem (hist);
+				hist = null;
+			}
 
-		if (document is not null)
-			document.Workspace.Invalidate ();
+			ResetHandlesToCanvas (document);
+		}
 	}
 
 	protected override void OnMouseDown (Document document, ToolMouseEventArgs e)
 	{
-		// Ignore extra button clicks while dragging
+		// Ignore extra button clicks while dragging.
 		if (handle.IsDragging)
 			return;
 
-		// Only start a drag if the mouse is on top of a handle.
-		if (!handle.BeginDrag (e.PointDouble))
-			return;
-
-		// All resize operations during this drag are merged into a single
-		// history item, so that undo restores the original canvas size.
-		hist = new CompoundHistoryItem (
-			Pinta.Resources.Icons.ImageResizeCanvas,
-			AddinManager.CurrentLocalizer.GetString ("Resize Canvas"));
-
-		// The canvas is resized live while dragging.
-		ResizeCanvas (document, e.PointDouble);
+		// Only start a drag if the mouse is on top of a handle. The canvas
+		// is resized live while dragging.
+		handle.BeginDrag (e.PointDouble);
 	}
 
 	protected override void OnMouseMove (Document document, ToolMouseEventArgs e)
@@ -98,14 +91,15 @@ public sealed class CanvasResizeTool : BaseTool
 		RectangleI handleDirtyRegion = handle.UpdateDrag (e.PointDouble, e.IsShiftPressed);
 		document.Workspace.InvalidateWindowRect (handleDirtyRegion);
 
-		ResizeCanvas (document, e.PointDouble);
+		// Resize the canvas live so the dragged edge follows the mouse.
+		ResizeCanvas (document);
 	}
 
 	protected override void OnMouseUp (Document document, ToolMouseEventArgs e)
 	{
 		if (handle.IsDragging) {
 			// Final resize to the exact mouse position.
-			ResizeCanvas (document, e.PointDouble);
+			ResizeCanvas (document);
 			handle.EndDrag ();
 
 			// Push the merged history item.
@@ -113,6 +107,9 @@ public sealed class CanvasResizeTool : BaseTool
 				document.History.PushNewItem (hist);
 				hist = null;
 			}
+
+			// Snap all eight handles back to the new canvas bounds.
+			ResetHandlesToCanvas (document);
 		}
 
 		// Update the mouse cursor.
@@ -120,10 +117,11 @@ public sealed class CanvasResizeTool : BaseTool
 	}
 
 	/// <summary>
-	/// Resizes the canvas so that the dragged edge/corner follows the mouse position.
-	/// The opposite edge/corner stays fixed.
+	/// Resizes the canvas so that the dragged edge/corner follows the current
+	/// handle rectangle. All resizes during one drag are merged into a single
+	/// history item (created lazily on the first actual size change).
 	/// </summary>
-	private void ResizeCanvas (Document document, PointD canvasPos)
+	private void ResizeCanvas (Document document)
 	{
 		RectangleD rect = handle.Rectangle;
 
@@ -137,7 +135,23 @@ public sealed class CanvasResizeTool : BaseTool
 		// Determine which edge(s) are fixed, based on which handle is being dragged.
 		Anchor anchor = handle.GetAnchor ();
 
+		hist ??= new CompoundHistoryItem (
+			Pinta.Resources.Icons.ImageResizeCanvas,
+			AddinManager.CurrentLocalizer.GetString ("Resize Canvas"));
+
 		document.ResizeCanvas (newSize, anchor, hist);
+
+		// Refresh the whole canvas so the resized content is shown live.
+		document.Workspace.Invalidate ();
+	}
+
+	/// <summary>
+	/// Moves all eight handles so they sit exactly on the canvas bounds.
+	/// </summary>
+	private void ResetHandlesToCanvas (Document document)
+	{
+		handle.Rectangle = new RectangleD (0, 0, document.ImageSize.Width, document.ImageSize.Height);
+		document.Workspace.Invalidate ();
 	}
 
 	private void UpdateCursor (PointD viewPos)

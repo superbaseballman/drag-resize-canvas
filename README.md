@@ -8,8 +8,8 @@ files onto the selected layer.
 
 - **8 drag handles** on the canvas — 4 corners + 4 edge midpoints.
 - Resize by **expanding or shrinking** the canvas; the opposite edge/corner stays fixed while you drag.
-- **Live preview** — the canvas updates in real time as you drag.
-- A single drag is merged into **one undo step**, so Undo restores the original canvas size.
+- **Live preview** — the canvas updates in real time as you drag, and the handles snap back to the new canvas edges when you release.
+- A single drag is **one undo step**, so Undo restores the original canvas size.
 - Handles are drawn at a constant on-screen size regardless of zoom, with resize cursors on hover.
 - **Place Image onto Layer** — place an image file onto the currently selected layer, replacing its content in a single undoable step.
 
