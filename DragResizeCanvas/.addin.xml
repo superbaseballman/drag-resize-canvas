@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<Addin id="DragResizeCanvas" version="0.1.0" category="Tools">
+<Addin id="DragResizeCanvas" version="0.2.0" category="Tools">
 	<!-- This is the information shown in the add-in manager, with translations -->
 	<Header>
 		<Name>Drag Resize Canvas</Name>
-		<Description>Resize the canvas by dragging handles on its edges and corners.</Description>
+		<Description>Canvas tools: drag to resize the canvas, and place image files onto layers.</Description>
 		<Author>PeaShooter (superbaseballman)</Author>
 		<Url>https://github.com/superbaseballman/drag-resize-canvas</Url>
 	</Header>

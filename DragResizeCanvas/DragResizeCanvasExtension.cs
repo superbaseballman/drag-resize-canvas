@@ -8,10 +8,12 @@ public sealed class DragResizeCanvasExtension : IExtension
 	public void Initialize ()
 	{
 		PintaCore.Tools.AddTool (new CanvasResizeTool (PintaCore.Services));
+		PintaCore.Tools.AddTool (new PlaceImageTool (PintaCore.Services));
 	}
 
 	public void Uninitialize ()
 	{
 		PintaCore.Tools.RemoveInstanceOfTool<CanvasResizeTool> ();
+		PintaCore.Tools.RemoveInstanceOfTool<PlaceImageTool> ();
 	}
 }
