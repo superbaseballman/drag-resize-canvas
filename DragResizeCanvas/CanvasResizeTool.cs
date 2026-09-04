@@ -24,7 +24,7 @@ public sealed class CanvasResizeTool : BaseTool
 		=> AddinManager.CurrentLocalizer.GetString ("Canvas Resize");
 
 	public override string Icon
-		=> Pinta.Resources.Icons.ImageResizeCanvas;
+		=> "drag-resize-canvas-symbolic";
 
 	public override string StatusBarText
 		=> AddinManager.CurrentLocalizer.GetString (

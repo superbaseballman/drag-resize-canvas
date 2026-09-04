@@ -13,6 +13,7 @@ files onto the selected layer.
 - Handles are drawn at a constant on-screen size regardless of zoom, with resize cursors on hover.
 - **Resize Selected Pixels** — freely scale the selected region with the same 8 handles, with the opposite edge or corner fixed.
 - **Place Image onto Layer** — place an image file onto the currently selected layer, replacing its content in a single undoable step.
+- **Plugin Settings** — enable only the tools you need and choose interpolation and pixel-fill behavior for selection resizing.
 
 ## Installation
 
@@ -62,6 +63,12 @@ mautil pack DragResizeCanvas/bin/Release/net8.0/DragResizeCanvas.dll
 1. Make a selection and select the **Resize Selected Pixels** tool.
 2. Drag any of the 8 handles around the selection to scale it. Corner handles scale both dimensions; edge handles scale one dimension.
 3. Release the mouse button to finish. Use **Ctrl+Z** to undo the whole resize.
+
+### Plugin settings
+
+1. Select **Drag Resize Canvas Settings** from the toolbox.
+2. Enable or disable the canvas resize, selection resize, and place image tools independently.
+3. For selection resizing, choose **Nearest Neighbor** or **Bilinear** interpolation and either transparent or repeated edge-pixel filling.
 
 ## License
 

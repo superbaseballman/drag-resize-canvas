@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+- Added independent enable/disable settings for each plugin tool.
+- Added custom symbolic icons for the plugin tools.
+- Added nearest-neighbor and bilinear interpolation options for selection resizing.
+- Added transparent and repeated edge-pixel fill modes for selection resizing.
+
 ## [0.2.1] - 2026-09-03
 
 ### Fixed

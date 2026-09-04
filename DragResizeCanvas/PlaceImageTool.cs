@@ -32,7 +32,7 @@ public sealed class PlaceImageTool : BaseTool
 		=> AddinManager.CurrentLocalizer.GetString ("Place Image");
 
 	public override string Icon
-		=> Pinta.Resources.Icons.LayerImport;
+		=> "drag-place-image-symbolic";
 
 	public override string StatusBarText
 		=> AddinManager.CurrentLocalizer.GetString (

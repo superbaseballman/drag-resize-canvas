@@ -16,5 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include=".addin.xml" />
+    <Content Include="icons/**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

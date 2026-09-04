@@ -39,4 +39,16 @@ run ('mautil', ['pack', path.join (root, 'DragResizeCanvas', 'bin', 'Release', '
 	env: { ...process.env, DOTNET_ROLL_FORWARD: 'LatestMajor' },
 });
 
-console.log (`\nDone: ${path.join (root, `DragResizeCanvas.${version}.mpack`)}`);
+// mautil packs the assembly and embedded add-in metadata, but not adjacent
+// content files. Add the GTK icon theme directory to the package explicitly.
+const packagePath = path.join (root, `DragResizeCanvas.${version}.mpack`);
+const outputDirectory = path.join (root, 'DragResizeCanvas', 'bin', 'Release', 'net8.0');
+const iconFiles = [
+	'icons/hicolor/scalable/actions/drag-place-image-symbolic.svg',
+	'icons/hicolor/scalable/actions/drag-resize-canvas-settings-symbolic.svg',
+	'icons/hicolor/scalable/actions/drag-resize-canvas-symbolic.svg',
+	'icons/hicolor/scalable/actions/drag-resize-selection-symbolic.svg',
+];
+run ('zip', [packagePath, ...iconFiles], { cwd: outputDirectory });
+
+console.log (`\nDone: ${packagePath}`);

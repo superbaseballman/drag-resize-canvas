@@ -16,9 +16,11 @@ public sealed class SelectionResizeTool : BaseTool
 	private readonly Matrix original_transform = CairoExtensions.CreateIdentityMatrix ();
 	private MovePixelsHistoryItem? hist;
 	private RectangleD source_rectangle;
+	private readonly DragResizeCanvasSettings settings;
 
-	public SelectionResizeTool (IServiceProvider services) : base (services)
+	public SelectionResizeTool (IServiceProvider services, DragResizeCanvasSettings settings) : base (services)
 	{
+		this.settings = settings;
 		handle = new CanvasResizeHandle (services.GetService<IWorkspaceService> ());
 	}
 
@@ -26,7 +28,7 @@ public sealed class SelectionResizeTool : BaseTool
 		=> AddinManager.CurrentLocalizer.GetString ("Resize Selected Pixels");
 
 	public override string Icon
-		=> Pinta.Resources.Icons.ImageResizeCanvas;
+		=> "drag-resize-selection-symbolic";
 
 	public override string StatusBarText
 		=> AddinManager.CurrentLocalizer.GetString (
@@ -112,6 +114,7 @@ public sealed class SelectionResizeTool : BaseTool
 		original_transform.InitMatrix (document.Layers.SelectionLayer.Transform);
 		hist = new MovePixelsHistoryItem (Icon, Name, document);
 		hist.TakeSnapshot (!document.Layers.ShowSelectionLayer);
+		SetTransformResamplingMode (document.Layers.SelectionLayer, settings.Resampling);
 
 		if (document.Layers.ShowSelectionLayer)
 			return;
@@ -126,6 +129,8 @@ public sealed class SelectionResizeTool : BaseTool
 		document.Selection.Clip (selectionContext);
 		selectionContext.SetSourceSurface (document.Layers.CurrentUserLayer.Surface, 0, 0);
 		selectionContext.Paint ();
+		if (settings.FillMode == SelectionFillMode.EdgePixels)
+			ExtendSelectionEdges (document.Layers.SelectionLayer.Surface, source_rectangle);
 
 		using Context layerContext = new (document.Layers.CurrentUserLayer.Surface);
 		document.Selection.Clip (layerContext);
@@ -169,6 +174,47 @@ public sealed class SelectionResizeTool : BaseTool
 		transform.Scale (scaleX, scaleY);
 		transform.Translate (-fixedPoint.X, -fixedPoint.Y);
 		return transform;
+	}
+
+	private static void ExtendSelectionEdges (ImageSurface surface, RectangleD selection)
+	{
+		ImageSurface source = surface.Clone ();
+		int left = Math.Clamp ((int) Math.Floor (selection.X), 0, surface.Width - 1);
+		int top = Math.Clamp ((int) Math.Floor (selection.Y), 0, surface.Height - 1);
+		int right = Math.Clamp ((int) Math.Ceiling (selection.EndLocation ().X), left + 1, surface.Width);
+		int bottom = Math.Clamp ((int) Math.Ceiling (selection.EndLocation ().Y), top + 1, surface.Height);
+
+		using Context context = new (surface);
+		for (int y = 0; y < top; y++)
+			PaintStrip (context, source, left, y, right - left, 1, 0, y - top);
+		for (int y = bottom; y < surface.Height; y++)
+			PaintStrip (context, source, left, y, right - left, 1, 0, y - (bottom - 1));
+		for (int x = 0; x < left; x++)
+			PaintStrip (context, source, x, top, 1, bottom - top, x - left, 0);
+		for (int x = right; x < surface.Width; x++)
+			PaintStrip (context, source, x, top, 1, bottom - top, x - (right - 1), 0);
+	PaintStrip (context, source, 0, 0, left, top, -left, -top);
+	PaintStrip (context, source, right, 0, surface.Width - right, top, -(right - 1), -top);
+	PaintStrip (context, source, 0, bottom, left, surface.Height - bottom, -left, -(bottom - 1));
+	PaintStrip (context, source, right, bottom, surface.Width - right, surface.Height - bottom, -(right - 1), -(bottom - 1));
+
+		source.Dispose ();
+	}
+
+	private static void SetTransformResamplingMode (Layer layer, ResamplingMode mode)
+	{
+		// This property is optional so the add-in remains loadable with stock Pinta builds.
+		layer.GetType ().GetProperty ("TransformResamplingMode")?.SetValue (layer, mode);
+	}
+
+	private static void PaintStrip (Context context, ImageSurface source, int destinationX, int destinationY, int width, int height, double offsetX, double offsetY)
+	{
+		context.Save ();
+		context.Rectangle (new RectangleD (destinationX, destinationY, width, height));
+		context.Clip ();
+		context.SetSourceSurface (source, offsetX, offsetY);
+		context.Paint ();
+		context.Restore ();
 	}
 
 	private void UpdateCursor (PointD viewPos)
