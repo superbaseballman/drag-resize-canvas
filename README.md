@@ -11,6 +11,7 @@ files onto the selected layer.
 - **Live preview** — the canvas updates in real time as you drag, and the handles snap back to the new canvas edges when you release.
 - A single drag is **one undo step**, so Undo restores the original canvas size.
 - Handles are drawn at a constant on-screen size regardless of zoom, with resize cursors on hover.
+- **Resize Selected Pixels** — freely scale the selected region with the same 8 handles, with the opposite edge or corner fixed.
 - **Place Image onto Layer** — place an image file onto the currently selected layer, replacing its content in a single undoable step.
 
 ## Installation
@@ -55,6 +56,12 @@ mautil pack DragResizeCanvas/bin/Release/net8.0/DragResizeCanvas.dll
 1. Select the target layer in the **Layers** panel.
 2. Select the **Place Image** tool from the toolbox — a file picker opens automatically. (Clicking the canvas re-opens the picker if it was cancelled.)
 3. Choose an image file. It is placed onto the selected layer at its native size, aligned to the top-left corner, replacing any existing content. Use **Ctrl+Z** to undo.
+
+### Resizing selected pixels
+
+1. Make a selection and select the **Resize Selected Pixels** tool.
+2. Drag any of the 8 handles around the selection to scale it. Corner handles scale both dimensions; edge handles scale one dimension.
+3. Release the mouse button to finish. Use **Ctrl+Z** to undo the whole resize.
 
 ## License
 
