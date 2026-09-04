@@ -39,6 +39,21 @@ jobs:
       run: dotnet tool install --global Mono.Addins.UtilTool
     - name: Create Package
       run: mautil pack DragResizeCanvas/bin/Release/net8.0/DragResizeCanvas.dll
+    - name: Add icons to package
+      # mautil packs the assembly and embedded add-in metadata, but not adjacent
+      # content files. Add the GTK icon theme directory to the package so the
+      # add-in's tool icons are available after installation.
+      run: |
+        python3 - <<'PY'
+        import glob, os, zipfile
+        mpack = glob.glob('DragResizeCanvas.*.mpack')[0]
+        with zipfile.ZipFile(mpack, 'a', zipfile.ZIP_DEFLATED) as z:
+            for root, _dirs, files in os.walk('DragResizeCanvas/icons'):
+                for name in files:
+                    path = os.path.join(root, name)
+                    z.write(path, os.path.relpath(path, 'DragResizeCanvas'))
+        print('Added icons to', mpack)
+        PY
     - name: Upload Package
       uses: actions/upload-artifact@v6
       with:
