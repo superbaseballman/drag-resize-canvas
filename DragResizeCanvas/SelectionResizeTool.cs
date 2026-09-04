@@ -72,7 +72,10 @@ public sealed class SelectionResizeTool : BaseTool
 		if (e.MouseButton != MouseButton.Left || document.Selection.SelectionPolygons.Count == 0)
 			return;
 
-		if (!handle.IsDragging && handle.BeginDrag (e.PointDouble))
+		source_rectangle = document.Selection.GetBounds ();
+		handle.Rectangle = document.Selection.HandleBounds;
+
+		if (!handle.IsDragging && handle.BeginDrag (e.PointDouble, e.RootPoint))
 			StartTransform (document);
 	}
 
@@ -83,7 +86,7 @@ public sealed class SelectionResizeTool : BaseTool
 			return;
 		}
 
-		RectangleI dirty = handle.UpdateDrag (e.PointDouble, e.IsShiftPressed);
+		RectangleI dirty = handle.UpdateDrag (e.RootPoint, e.IsShiftPressed);
 		document.Workspace.InvalidateWindowRect (dirty);
 		UpdateTransform (document);
 	}

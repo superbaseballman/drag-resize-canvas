@@ -121,6 +121,10 @@ public sealed class CanvasResizeHandle : IToolHandle
 	private readonly Dictionary<CanvasHandlePoint, CanvasMoveHandle> handles;
 	private CanvasMoveHandle? active_handle;
 	private PointD? drag_start_pos;
+	private PointD drag_start_root_pos;
+	private PointD drag_start_canvas_pos;
+	private double drag_scale_x;
+	private double drag_scale_y;
 
 	// The rectangle before the drag began, used to snap the handles back
 	// into place when the drag ends.
@@ -188,7 +192,7 @@ public sealed class CanvasResizeHandle : IToolHandle
 	/// The current rectangle is saved so the handles can snap back when
 	/// the drag ends, leaving the actual resizing to the caller.
 	/// </summary>
-	public bool BeginDrag (in PointD canvasPos)
+	public bool BeginDrag (in PointD canvasPos, in PointD rootPos)
 	{
 		if (IsDragging)
 			return false;
@@ -204,6 +208,10 @@ public sealed class CanvasResizeHandle : IToolHandle
 		resized_rectangle = null;
 
 		drag_start_pos = viewPos;
+		drag_start_root_pos = rootPos;
+		drag_start_canvas_pos = canvasPos;
+		drag_scale_x = workspace.CanvasPointToView (canvasPos with { X = canvasPos.X + 1 }).X - viewPos.X;
+		drag_scale_y = workspace.CanvasPointToView (canvasPos with { Y = canvasPos.Y + 1 }).Y - viewPos.Y;
 		return true;
 	}
 
@@ -211,15 +219,20 @@ public sealed class CanvasResizeHandle : IToolHandle
 	/// Updates the rectangle as the mouse is moved.
 	/// </summary>
 	/// <returns>The region to redraw with InvalidateWindowRect()</returns>
-	public RectangleI UpdateDrag (PointD canvasPos, bool shiftPressed)
+	public RectangleI UpdateDrag (PointD rootPos, bool shiftPressed)
 	{
 		if (!IsDragging || active_handle is null)
 			throw new InvalidOperationException ("Drag operation has not been started!");
 
 		RectangleI dirty = ComputeInvalidateRect ();
 
+		start_pt = start_snapshot;
+		end_pt = end_snapshot;
+		double x = drag_start_canvas_pos.X + (rootPos.X - drag_start_root_pos.X) / drag_scale_x;
+		double y = drag_start_canvas_pos.Y + (rootPos.Y - drag_start_root_pos.Y) / drag_scale_y;
+
 		CanvasHandlePoint activeHandlePoint = handles.First (kv => kv.Value == active_handle).Key;
-		MoveActiveHandle (activeHandlePoint, canvasPos.X, canvasPos.Y, shiftPressed);
+		MoveActiveHandle (activeHandlePoint, x, y, shiftPressed);
 		UpdateHandlePositions ();
 
 		dirty = dirty.Union (ComputeInvalidateRect ());

@@ -78,7 +78,7 @@ public sealed class CanvasResizeTool : BaseTool
 
 		// Only start a drag if the mouse is on top of a handle. The canvas
 		// is resized live while dragging.
-		handle.BeginDrag (e.PointDouble);
+		handle.BeginDrag (e.PointDouble, e.RootPoint);
 	}
 
 	protected override void OnMouseMove (Document document, ToolMouseEventArgs e)
@@ -88,7 +88,7 @@ public sealed class CanvasResizeTool : BaseTool
 			return;
 		}
 
-		RectangleI handleDirtyRegion = handle.UpdateDrag (e.PointDouble, e.IsShiftPressed);
+		RectangleI handleDirtyRegion = handle.UpdateDrag (e.RootPoint, e.IsShiftPressed);
 		document.Workspace.InvalidateWindowRect (handleDirtyRegion);
 
 		// Resize the canvas live so the dragged edge follows the mouse.
@@ -140,6 +140,8 @@ public sealed class CanvasResizeTool : BaseTool
 			AddinManager.CurrentLocalizer.GetString ("Resize Canvas"));
 
 		document.ResizeCanvas (newSize, anchor, hist);
+
+		handle.Rectangle = new RectangleD (0, 0, newSize.Width, newSize.Height);
 
 		// Refresh the whole canvas so the resized content is shown live.
 		document.Workspace.Invalidate ();
